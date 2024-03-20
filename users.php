@@ -1,7 +1,7 @@
 <?php
 
 // Définir un modèle pour les utilisateurs
-$model = ['id','lastname','firstname','email','password','role']; // on peut aussi ajouter le typage des valeurs
+$model = ['id', 'lastname', 'firstname', 'email', 'password', 'role']; // on peut aussi ajouter le typage des valeurs
 
 // Donnée simulées pour les utilisateurs
 $users =
@@ -13,7 +13,7 @@ $users =
             'email' => 'john.doe@cci.com',
             'password' => 'john1234',
             'role' => 'admin'
-        ], 
+        ],
         [
             'id' => 2,
             'lastname' => 'Doe',
@@ -48,7 +48,7 @@ $users =
         ]
     ];
 
-// Fonction pour afficher les utilisateurs
+// Fonction pour afficher les utilisateurs par la méthode GET
 function getAll()
 {
     global $users;
@@ -61,7 +61,7 @@ function getAll()
     return $users;
 }
 
-// Fonction pour trouver un utilisateur par son identifiant
+// Fonction pour trouver un utilisateur par son identifiant par la méthode GET
 function getUserById(int $id)
 {
     global $users;
@@ -76,7 +76,7 @@ function getUserById(int $id)
     ];
 }
 
-// Fonction pour créer un nouvel utitlisateur
+// Fonction pour créer un nouvel utitlisateur par la méthode POST
 function createUser(array $user)
 {
     global $users;
@@ -84,24 +84,27 @@ function createUser(array $user)
     $keys = array_keys($user);
     $diff = array_diff($model, $keys);
 
-    if(empty($user)){
-                        return [
-                                    "code" => 400,
-                                    "message" => "aucune data utilisateur n'a été envoyée"
-                        ];
+    if (empty($user)) {
+        http_response_code(404);
+        return [
+            "code" => 400,
+            "message" => "aucune data utilisateur n'a été envoyée"
+        ];
     }
-    
+
     if (count($diff) > 0) {
         $message = "Il manque les cles suivantes dans le tableau : ";
-        $i =0;
-        foreach ($diff as $key =>$value) {
-            if ($key === array_keys($model, $value)[0] && $i === 0) {
+        $i = 0;
+        foreach ($diff as $key => $value) { // on parcourt le tableau $diff et on récupère les $clés de $diff 
+            if ($key === array_keys($model, $value)[0] && $i === 0) { // on compare les $clés de $diff avec les $clés de $model
+
                 $message .= " $value"; // pour la première itération on ajoute un espace
                 $i++; // on ajoute 1 au compteur
                 continue;
             }
             $message .= ", $value"; // pourles autres  itérations on ajoute une virgule
         }
+        http_response_code(404);
         return [
             "code" => 400,
             "message" => $message
@@ -109,11 +112,12 @@ function createUser(array $user)
     }
     // var_dump(array_diff($model, $keys)); // on compare les cles de $model et de $user le premier argument est le tableau $model et le deuxième est le tableau $user
     // die();
+    http_response_code(200);
     $users[] = $user;
     return $user; // convention on renvoie le nouvel utilisateur soit $user
 }
 
-// Fonction pour modifier un utilisateur
+// Fonction pour modifier un utilisateur par son identifiant en méthode PATCH
 function updateUser(int $id, $updates)
 {
     global $users;
@@ -122,22 +126,82 @@ function updateUser(int $id, $updates)
             foreach ($updates as $key2 => $update) {
                 $users[$key][$key2] = $update;
             }
-            return $user; // convention on renvoie le nouvel utilisateur soit $user
+            http_response_code(200);
+            return $users; // convention on renvoie le nouvel utilisateur soit $user mais pour l'update on va renvoyer un tableau des users
         }
     }
-    // return null;
+    http_response_code(404);
+        return [ // on gère le cas ou l'utilisateur n'existe pas et on renvoie un message d'erreur condition du if à la ligne 122
+            "code" => 404,
+            "message" => "l'utilisateur avec l'id $id n'existe pas !"
+        ];
+}
+
+// Fonction pour remplacer un utilisateur par son identifiant en méthode PUT
+function replaceUser(int $id, array $puts){
+    global $users;
+    global $model;
+
+    $keys= array_keys($puts);
+    $diff = array_diff($model, $keys);
+
+    if (empty($puts)) {
+        http_response_code(404);
+        return [
+            "code" => 400,
+            "message" => "aucune data utilisateur n'a été envoyée"
+        ];
+    }
+
+    if (count($diff) > 0) {
+        $message = "Il manque les cles suivantes dans le tableau : ";
+        $i = 0;
+        foreach ($diff as $key => $value) { // on parcourt le tableau $diff et on récupère les $clés de $diff 
+            if ($key === array_keys($model, $value)[0] && $i === 0) { // on compare les $clés de $diff avec les $clés de $model
+
+                $message .= " $value"; // pour la première itération on ajoute un espace
+                $i++; // on ajoute 1 au compteur
+                continue;
+            }
+            $message .= ", $value"; // pourles autres  itérations on ajoute une virgule
+        }
+        http_response_code(404);
+        return [
+            "code" => 400,
+            "message" => $message
+        ];
+    }
+    foreach ($users as $key => $user) {
+        
+        if ($user['id'] === $id) {
+            $users[$key] = $puts;
+            http_response_code(200);
+            return $users; // convention on renvoie le nouvel utilisateur soit $user mais pour l'update on va renvoyer un tableau des users
+        }
+        http_response_code(404);
+        return [ // on gère le cas ou l'utilisateur n'existe pas et on renvoie un message d'erreur condition du if à la ligne 144
+            "code" => 404,
+            "message" => "l'utilisateur avec l'id $id n'existe pas !"
+        ];
+    }
+    return null;
 }
 
 
-// fonction pour supprimer un utilisateur
+// fonction pour supprimer un utilisateur par son identifiant en méthode DELETE
 function deleteUser(int $id)
 {
     global $users;
     foreach ($users as $key => $user) {
         if ($user['id'] === $id) {
             unset($users[$key]);
-            return "l'utilisateur avec l'id $id a bien été supprimé";
+            http_response_code(200);
+            return ["l'utilisateur avec l'id $id a bien été supprimé", $users];
         }
     }
-    return null;
+    http_response_code(404);
+    return [ // on gère le cas ou l'utilisateur n'existe pas et on renvoie un message d'erreur condition du if à la ligne 144
+        "code" => 404,
+        "message" => "l'utilisateur avec l'id $id n'existe pas !"
+    ];
 }
