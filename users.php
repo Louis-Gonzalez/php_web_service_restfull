@@ -187,7 +187,6 @@ function replaceUser(int $id, array $puts){
     return null;
 }
 
-
 // fonction pour supprimer un utilisateur par son identifiant en méthode DELETE
 function deleteUser(int $id)
 {
