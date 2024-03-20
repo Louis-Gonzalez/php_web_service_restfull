@@ -23,6 +23,8 @@ require "./users.php";
 $uri = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Ajouter le header "application/json" à destination des navigateurs web
+header('Content-Type: application/json');
 
 // Routeur pour les différentes opérations CRUD
 switch ($method){
@@ -31,17 +33,19 @@ switch ($method){
         preg_match("/^\/php_web_service_restfull\/users\/?(\d+)?$/", $uri, $matches);
         if (!empty($matches) && !array_key_exists(1, $matches)) {
             $users = getAll();
-            var_dump("getAll", $matches);
-            echo "<pre>";
-            var_dump($users);
-            echo "</pre>";
+            // var_dump("getAll", $matches);
+            // echo "<pre>";
+            // var_dump($users);
+            // echo "</pre>";
+            echo json_encode($users);
         }
         if (!empty($matches) && array_key_exists(1, $matches)) {
             $user = getUserById((int)$matches[1]);
-            var_dump("getUserById", $matches);
-            echo "<pre>";
-            var_dump($user);
-            echo "</pre>";
+            // var_dump("getUserById", $matches);
+            // echo "<pre>";
+            // var_dump($user);
+            // echo "</pre>";
+            echo json_encode($user);
         }
         break; 
     case '': $response = createUser($user); break;
