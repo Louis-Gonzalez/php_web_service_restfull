@@ -28,16 +28,17 @@ header('Content-Type: application/json');
 
 // Routeur pour les différentes opérations CRUD
 switch ($method){
-    
     case 'GET': // http://localhost/php_web_service_restfull/users
         preg_match("/^\/php_web_service_restfull\/users\/?(\d+)?$/", $uri, $matches);
-        if (!empty($matches) && !array_key_exists(1, $matches)) {
+
+        if (!empty($matches) && !array_key_exists(1, $matches)) { 
             $users = getAll();
             // var_dump("getAll", $matches);
             // echo "<pre>";
             // var_dump($users);
             // echo "</pre>";
             echo json_encode($users);
+            break;
         }
         if (!empty($matches) && array_key_exists(1, $matches)) {
             $user = getUserById((int)$matches[1]);
@@ -46,12 +47,17 @@ switch ($method){
             // var_dump($user);
             // echo "</pre>";
             echo json_encode($user);
+            break;
         }
+
         break; 
     case '': $response = createUser($user); break;
     case '': $response = updateUser($id, $updates); break;
     case '': $response = deleteUser($id); break;
-    default : http_response_code(404); echo "Ressource introuvable"; break;
+    default: 
+        http_response_code(404); 
+        echo "Ressource introuvable"; 
+        break;
 }
 
 

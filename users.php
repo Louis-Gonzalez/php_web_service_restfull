@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 // Donnée simulées pour les utilisateurs
 
@@ -47,31 +47,44 @@ $users =
     ];
 
 // Fonction pour afficher les utilisateurs
-function getAll(){
+function getAll()
+{
     global $users;
+    if (empty($users)) {
+        return  [
+            "code" => 200,
+            "message" => "aucun utilisateur trouvé"
+        ];
+    }
     return $users;
 }
 
 // Fonction pour trouver un utilisateur par son identifiant
-function getUserById(int $id){
+function getUserById(int $id)
+{
     global $users;
     foreach ($users as $user) {
         if ($user['id'] === $id) {
             return $user;
         }
     }
-    return null;
+    return  [
+        "code" => 200,
+        "message" => "aucun utilisateur trouvé avec l'id : $id "
+    ];
 }
 
 // Fonction pour créer un nouvel utitlisateur
-function createUser(array $user){
+function createUser(array $user)
+{
     global $users;
     $users[] = $user;
     return $user; // convention on renvoie le nouvel utilisateur soit $user
 }
 
 // Fonction pour modifier un utilisateur
-function updateUser(int $id, $updates){
+function updateUser(int $id, $updates)
+{
     global $users;
     foreach ($users as $key => $user) {
         if ($user['id'] === $id) {
@@ -86,7 +99,8 @@ function updateUser(int $id, $updates){
 
 
 // fonction pour supprimer un utilisateur
-function deleteUser(int $id){
+function deleteUser(int $id)
+{
     global $users;
     foreach ($users as $key => $user) {
         if ($user['id'] === $id) {
@@ -96,5 +110,3 @@ function deleteUser(int $id){
     }
     return null;
 }
-
-?>
