@@ -1,7 +1,9 @@
 <?php
 
-// Donnée simulées pour les utilisateurs
+// Définir un modèle pour les utilisateurs
+$model = ['id','lastname','firstname','email','password','role']; // on peut aussi ajouter le typage des valeurs
 
+// Donnée simulées pour les utilisateurs
 $users =
     [
         [
@@ -78,6 +80,35 @@ function getUserById(int $id)
 function createUser(array $user)
 {
     global $users;
+    global $model;
+    $keys = array_keys($user);
+    $diff = array_diff($model, $keys);
+
+    if(empty($user)){
+                        return [
+                                    "code" => 400,
+                                    "message" => "aucune data utilisateur n'a été envoyée"
+                        ];
+    }
+    
+    if (count($diff) > 0) {
+        $message = "Il manque les cles suivantes dans le tableau : ";
+        $i =0;
+        foreach ($diff as $key =>$value) {
+            if ($key === array_keys($model, $value)[0] && $i === 0) {
+                $message .= " $value"; // pour la première itération on ajoute un espace
+                $i++; // on ajoute 1 au compteur
+                continue;
+            }
+            $message .= ", $value"; // pourles autres  itérations on ajoute une virgule
+        }
+        return [
+            "code" => 400,
+            "message" => $message
+        ];
+    }
+    // var_dump(array_diff($model, $keys)); // on compare les cles de $model et de $user le premier argument est le tableau $model et le deuxième est le tableau $user
+    // die();
     $users[] = $user;
     return $user; // convention on renvoie le nouvel utilisateur soit $user
 }

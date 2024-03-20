@@ -51,7 +51,14 @@ switch ($method){
         }
 
         break; 
-    case '': $response = createUser($user); break;
+    case 'POST': 
+        $user = $_POST;
+        preg_match("/^\/php_web_service_restfull\/users\/?(\d+)?$/", $uri, $matches);
+        $user = createUser($user);
+        echo json_encode($user);
+        // var_dump($_POST);
+        break;
+
     case '': $response = updateUser($id, $updates); break;
     case '': $response = deleteUser($id); break;
     default: 
