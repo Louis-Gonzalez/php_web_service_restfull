@@ -24,39 +24,48 @@ require "./security.php";
 
 $uri = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
+$check = false;
 
 // Ajouter le header "application/json" à destination des navigateurs web
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-// echo json_encode(getallheaders());
-// die();
-$headers = getallheaders();
-$token = explode(' ', $headers['Authorization'])[1];
-
-// var_dump($token);
-// die();
-$check = false;
-try {
-    $check = validate_token($token, "123"); // le $secret_key à la valeur en string "123" que nous avons déclarer dans postman
+// Fonction de vérification du JWT = token
+function verify(){
+    global $check;
+    // Récupération du token dans le header
+    // echo json_encode(getallheaders());
+    // die();
+    $headers = getallheaders();
+    $token = explode(' ', $headers['Authorization'])[1];
+    $secret_key = base64_encode("john1234");
+    // var_dump($token);
+    // die();
+    try {
+        $check = validate_token($token, $secret_key); // le $secret_key à la valeur en string "123" que nous avons déclarer dans postman
+    }
+    catch (\Throwable $th) {
+        echo json_encode([
+            "code" => 401,
+            "message" => "Authentification invalide"
+        ]);
+        die();
+    }
 }
-catch (\Throwable $th) {
-    echo json_encode([
-        "code" => 401,
-        "message" => "Authentification invalide"
-    ]);
-    die();
-}
-// var_dump($check);
-
 
 // Routeur pour les différentes opérations CRUD
 switch ($method){
     case 'GET': // http://localhost/php_web_service_restfull/users
     global $check;
+    verify();
         if($check){
             preg_match("/^\/php_web_service_restfull\/users\/?(\d+)?$/", $uri, $matches);
             if (!empty($matches) && !array_key_exists(1, $matches)) { 
+                echo "<pre>";
+                var_dump($users);
+                echo "</pre>";
+                die();
+
                 $users = getAll();
                 // var_dump("getAll", $matches);
                 // echo "<pre>";
@@ -80,18 +89,70 @@ switch ($method){
             "message" => "accès non autorisé"
         ]);
         break; 
+
     case 'POST': 
         $user = $_POST;
-        preg_match("/^\/php_web_service_restfull\/users\/?(\d+)?$/", $uri, $matches);
-        $user = createUser($user);
-        echo json_encode($user);
+        // var_dump($user);
+        // var_dump($user['password']);
+        // modifier le regex pour les routes login et users et on récupère la corrrepondance de $matches[1] soit users pour créer soit login pour se connecter
+        preg_match("/^\/php_web_service_restfull\/(users||register||login)\/?(\d+)?$/", $uri, $matches); 
+
+        if($matches[1] === "users"){
+            $user = createUser($user);
+            echo json_encode($user);
+        }
+        if ($matches[1] === "register") {
+            $passwordEncoded = base64_encode($user['password']);
+            // var_dump("password encodé",$passwordEncoded);
+
+            try {
+                $token = generateToken($passwordEncoded, $user['email']);
+                // var_dump($token);
+                // die();
+                http_response_code(200);
+                echo json_encode($token);
+            }
+            catch (\Throwable $th) {
+                echo json_encode([
+                    "code" => 401,
+                    "message" => "Authentification invalide"
+                ]);
+                die();
+            }
+        }
+        if ($matches[1] === "login") { // 
+            foreach ($users as $item) {
+                if ($item['email'] === $user['email']) {
+                if ($item['password'] === $user['password']) {
+                        $passwordEncoded = base64_encode($user['password']);
+                    }
+                }
+            }
+            // var_dump("password encodé",$passwordEncoded);
+            try {
+                $token = generateToken($passwordEncoded, $user['email']);
+                // var_dump($token);
+                // die();
+                http_response_code(200);
+                echo json_encode($token);
+            }
+            catch (\Throwable $th) {
+                echo json_encode([
+                    "code" => 401,
+                    "message" => "Authentification invalide"
+                ]);
+                die();
+            }
+        }
         break;
+
+        // preg_match("/^\/php_web_service_restfull\/login\/?(\d+)?$/", $uri, $matches);
+
 
     case 'PATCH': 
         // modifié le regex pour trouver le bon chemin ? http://localhost/php_web_service_restfull/users/1
         preg_match("/^\/php_web_service_restfull\/users\/?(\d+)?$/", $uri, $matches); 
         // var_dump($matches);
-        
         $id = (int)$matches[1];
         $updates = file_get_contents("php://input"); // c'est l'endroit ou on recupere les informations venant de l'utilisateur
         $items = explode('&', $updates);

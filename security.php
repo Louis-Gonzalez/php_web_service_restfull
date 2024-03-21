@@ -11,11 +11,11 @@ use \Firebase\JWT\Key;
 // $secret_key = "Monmotdepasse2024!";
 
 // Fonction pour générer un token JWT
-function generateToken(string $secret_key): string
+function generateToken(string $secret_key, string $email): string
 {
     $payload = [
         "user_id" => 1,
-        "user_name" => "louis", // souvent un email 
+        "email" => $email, // souvent un email 
         "user_role" => "ADMIN",
         "exp" => time() + (60 * 60) // time() correspond au temps actuel et 60*60 correspond au temps d'expiration du token qui s'exprime en secondes
     ];
