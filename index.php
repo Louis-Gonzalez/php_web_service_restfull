@@ -2,6 +2,7 @@
 
 // Inclure le fichier user.php
 require "./users.php";
+require "./security.php";
 
 // Vérification dela partie .htaccess
 // echo "<pre>";
@@ -12,6 +13,7 @@ require "./users.php";
 
 // echo "<pre>";
 // var_dump($_SERVER);
+// var_dump(getallheaders());
 // var_dump("uri:",$_SERVER['REQUEST_URI']);
 // var_dump("method:",$_SERVER['REQUEST_METHOD']);
 // string(4) "uri:"
@@ -25,31 +27,58 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // Ajouter le header "application/json" à destination des navigateurs web
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+
+// echo json_encode(getallheaders());
+// die();
+$headers = getallheaders();
+$token = explode(' ', $headers['Authorization'])[1];
+
+// var_dump($token);
+// die();
+$check = false;
+try {
+    $check = validate_token($token, "123"); // le $secret_key à la valeur en string "123" que nous avons déclarer dans postman
+}
+catch (\Throwable $th) {
+    echo json_encode([
+        "code" => 401,
+        "message" => "Authentification invalide"
+    ]);
+    die();
+}
+// var_dump($check);
+
 
 // Routeur pour les différentes opérations CRUD
 switch ($method){
     case 'GET': // http://localhost/php_web_service_restfull/users
-        preg_match("/^\/php_web_service_restfull\/users\/?(\d+)?$/", $uri, $matches);
-
-        if (!empty($matches) && !array_key_exists(1, $matches)) { 
-            $users = getAll();
-            // var_dump("getAll", $matches);
-            // echo "<pre>";
-            // var_dump($users);
-            // echo "</pre>";
-            echo json_encode($users);
-            break;
+    global $check;
+        if($check){
+            preg_match("/^\/php_web_service_restfull\/users\/?(\d+)?$/", $uri, $matches);
+            if (!empty($matches) && !array_key_exists(1, $matches)) { 
+                $users = getAll();
+                // var_dump("getAll", $matches);
+                // echo "<pre>";
+                // var_dump($users);
+                // echo "</pre>";
+                echo json_encode($users);
+                break;
+            }
+            if (!empty($matches) && array_key_exists(1, $matches)) {
+                $user = getUserById((int)$matches[1]);
+                // var_dump("getUserById", $matches);
+                // echo "<pre>";
+                // var_dump($user);
+                // echo "</pre>";
+                echo json_encode($user);
+                break;
+            }
         }
-        if (!empty($matches) && array_key_exists(1, $matches)) {
-            $user = getUserById((int)$matches[1]);
-            // var_dump("getUserById", $matches);
-            // echo "<pre>";
-            // var_dump($user);
-            // echo "</pre>";
-            echo json_encode($user);
-            break;
-        }
-
+        echo json_encode([
+            "code" => 403,
+            "message" => "accès non autorisé"
+        ]);
         break; 
     case 'POST': 
         $user = $_POST;
