@@ -1,0 +1,17 @@
+{
+    "name": "69vfomt104-13/php_web_service_restfull",
+    "autoload": {
+        "psr-4": {
+            "App\\PhpWebServiceRestfull\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Gonzalez",
+            "email": "gonzalezlouis1981@gmail.com"
+        }
+    ],
+    "require": {
+        "firebase/php-jwt": "^6.10"
+    }
+}
